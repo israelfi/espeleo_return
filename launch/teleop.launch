@@ -1,0 +1,11 @@
+<launch>
+
+
+
+
+<!--Run the teleop key of the turtlesim package-->
+<node pkg = "turtlesim" name = "keyboard" type = "turtle_teleop_key" args="" output="screen">
+	<remap from="/turtle1/cmd_vel" to="/RosAria/cmd_vel"/>
+</node>
+
+</launch>
