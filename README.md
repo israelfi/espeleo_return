@@ -19,7 +19,7 @@ This code implements ....
 - `/cmd_vel`  (message type:`package/message_type`): Publish to this topic ...
 - `/return/traj_points`
 - `/visualization_marker_array`
-- `/visualization_marker_ref
+- `/visualization_marker_ref`
 - `/flag/distance_target`
 
 **Launch file**
