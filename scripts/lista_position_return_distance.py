@@ -23,7 +23,6 @@ delta = 0.01    # Variacao minima na posicao para que o buffer seja atualizado
 tolerance = 0.2 # Tolerancia entre o ponto tido como objetivo e posicao de parada
 size = 5.0      # Distancia de retorno maxima
 
-duration = 10.0 # Tempo em segundos que o buffer fica sendo atualizado
 
 lost_signal = False
 
@@ -152,11 +151,16 @@ def position_return():
     y_n_previous = 0.0
 
     flag_position = True
-    a = 1
-    buffer_size = 0.0 # Guardar a distancia em metros que o buffer tem armazenado
+    
+	# Variavel auxiliar para controle de rotina
+	a = 1
+	
+	# Guarda a distancia em metros que o buffer tem armazenado
+    buffer_size = 0.0 
 
     while not rospy.is_shutdown():
-        # Rotina realizada enquanto o sinal de radio nao foi perdida e o robo tiver chegado no ponto desejado
+	
+        # Rotina realizada enquanto o sinal de radio nao foi perdido e o robo tiver chegado no ponto desejado
         while (lost_signal != True and flag_position == True):
             # Distancia entre (x,y) atual e anterior
             distance_variation = sqrt((x_n - x_n_previous)**2 + (y_n - y_n_previous)**2)
@@ -175,29 +179,43 @@ def position_return():
                     get_position()
 
             else:
+				buffer_size = buffer_size + distance_variation
                 continue
 
         # Caso o sinal de radio seja perdido:
+		
+		# Rotina feita somente uma vez quando o sinal é perdido
         if(lost_signal == True and a == 1):
             flag_position = False
             pub_flag.publish(flag_position)
-            # x0 e y0 sao as coord. do ponto de retorno
-            x0, y0 = (position_buffer[0][0], position_buffer[0][1])
+						
+			try:
+				# x0 e y0 sao as coord. do ponto de retorno
+				x0, y0 = (position_buffer[0][0], position_buffer[0][1])
+				
+			except:
+				print('A problem occurred creating the buffer')
+				
             traj_msg = create_traj_msg(position_buffer)
             pub_traj.publish(traj_msg)
             time.sleep(1.0)
             send_curve_to_rviz(position_buffer, pub_rviz_curve)
             a = 0
 
-        # Calcula a distancia entre o ponto atual e o primeito ponto do buffer
+        # Calcula a distancia entre o ponto atual e o ponto de retorno
         distance = sqrt((x_n - x0)**2 + (y_n - y0)**2)
 
-        # Checa se o robo chegou ao ponto desejado
+        # Checa continuamente se o robo chegou ao ponto desejado
         if distance < 1.0*tolerance:
             flag_position = True
             a = 1
-            del position_buffer[:] # Limpando o buffer
-            buffer_size = 0
+			
+			# Limpando o buffer
+			try:
+				del position_buffer[:] 
+				buffer_size = 0
+			except:
+				print('Buffer already empty')
         elif a == 0:
             flag_position = False
 
